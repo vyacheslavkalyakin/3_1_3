@@ -10,7 +10,8 @@ import ru.kata.spring.boot_security.demo.model.User;
 @Controller
 @RequestMapping("/user")
 public class UserController {
-    @GetMapping("/user")
+
+    @GetMapping
     public String showUserInfo(Model model, @AuthenticationPrincipal User user) {
         model.addAttribute("user", user);
         return "user";
