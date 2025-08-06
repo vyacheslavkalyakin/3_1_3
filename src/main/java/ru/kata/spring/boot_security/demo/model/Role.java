@@ -3,6 +3,7 @@ package ru.kata.spring.boot_security.demo.model;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -17,7 +18,13 @@ public class Role implements GrantedAuthority {
     private String name;
 
     @ManyToMany(mappedBy = "roles")
-    private Set<User> users;
+    private Set<User> users = new HashSet<>();
+
+    @Override
+    public String getAuthority() {
+
+        return name;
+    }
 
     public Role(int id, String name) {
         this.id = id;
@@ -25,6 +32,7 @@ public class Role implements GrantedAuthority {
     }
 
     public Role(String name) {
+
         this.name = name;
     }
 
@@ -48,8 +56,4 @@ public class Role implements GrantedAuthority {
         this.name = name;
     }
 
-    @Override
-    public String getAuthority() {
-        return name;
-    }
 }

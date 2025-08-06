@@ -7,7 +7,6 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
-import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -18,28 +17,37 @@ public class InitDataBase {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public InitDataBase(UserRepository userRepository,
-                        RoleRepository roleRepository) {
+    @Autowired
+    public InitDataBase(UserRepository userRepository, RoleRepository roleRepository,
+                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostConstruct
     public void init() {
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            Role adminRole = new Role("ROLE_ADMIN");
-            Role userRole = new Role("ROLE_USER");
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN");
+        Role userRole = roleRepository.findByName("ROLE_USER");
 
+        if (adminRole == null || userRole == null) {
+            adminRole = new Role("ROLE_ADMIN");
+            userRole = new Role("ROLE_USER");
             roleRepository.saveAll(List.of(adminRole, userRole));
-
-            User admin = new User("admin", "admin", "admin@site.com");
-            admin.setRoles(Set.of(adminRole));
-            userRepository.save(admin);
-
-            User user = new User("user", "user", "user@site.com");
-            user.setRoles(Set.of(userRole));
-            userRepository.save(user);
         }
+
+        userRepository.deleteAll();
+
+        User admin = new User(passwordEncoder.encode("admin"), "admin@site.com",
+                "Admin", "Adminov", 30);
+        admin.setRoles(Set.of(adminRole));
+
+        User user = new User(passwordEncoder.encode("user"), "user@site.com",
+                "User", "Userov", 25);
+        user.setRoles(Set.of(userRole));
+
+        userRepository.saveAll(List.of(admin, user));
     }
 }
