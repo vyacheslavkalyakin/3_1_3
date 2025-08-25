@@ -15,7 +15,7 @@ public interface UserService {
 
     User getUserById(int id);
 
-    void editUser(int id, String password, String email, String firstName, String lastName, int age);
+    void editUser(int id, String password, String email, String firstName, String lastName, int age, List<Integer> roleIds);
 
-    public List<Role> getAllRoles();
+    List<Role> getAllRoles();
 }

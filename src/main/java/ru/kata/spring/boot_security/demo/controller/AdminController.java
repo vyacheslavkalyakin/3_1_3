@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
+
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.List;
@@ -26,24 +28,17 @@ public class AdminController {
         this.userService = userService;
         this.roleService = roleService;
     }
-
     @GetMapping
-    public String showAllUsers(Model model) {
+    public String showAllUsers(Model model, @AuthenticationPrincipal UserDetails currentUser) {
         model.addAttribute("users", userService.getAllUsers());
         model.addAttribute("user", new User());
         model.addAttribute("allRoles", userService.getAllRoles());
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            Object principal = auth.getPrincipal();
-            if (principal instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) principal;
-                model.addAttribute("username", userDetails.getUsername());
-                model.addAttribute("authorities", userDetails.getAuthorities());
-            } else {
-                model.addAttribute("username", principal.toString());
-            }
+        if (currentUser != null) {
+            model.addAttribute("username", currentUser.getUsername());
+            model.addAttribute("authorities", currentUser.getAuthorities());
         }
+
         return "admin";
     }
 
@@ -51,26 +46,16 @@ public class AdminController {
     public String showNewUserForm(Model model) {
         model.addAttribute("user", new User());
         model.addAttribute("allRoles", userService.getAllRoles());
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            Object principal = auth.getPrincipal();
-            if (principal instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) principal;
-                model.addAttribute("username", userDetails.getUsername());
-                model.addAttribute("authorities", userDetails.getAuthorities());
-            } else {
-                model.addAttribute("username", principal.toString());
-            }
-        }
         return "new-user";
     }
 
     @PostMapping("/new")
     public String addUser(@ModelAttribute("user") User user,
                           @RequestParam("roles") List<Integer> roleIds) {
-        Set<Role> userRoles = roleIds.stream().map(roleService::getRoleById)
-                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<Role> userRoles = roleIds.stream()
+                .map(roleService::getRoleById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         user.setRoles(userRoles);
         userService.saveUser(user);
         return "redirect:/admin";
@@ -83,10 +68,14 @@ public class AdminController {
     }
 
     @PostMapping("/edit")
-    public String editUser(@RequestParam int id, @RequestParam String password,
-                           @RequestParam String email, @RequestParam String firstName,
-                           @RequestParam String lastName, @RequestParam int age) {
-        userService.editUser(id, password, email, firstName, lastName, age);
+    public String editUser(@RequestParam int id,
+                           @RequestParam String password,
+                           @RequestParam String email,
+                           @RequestParam String firstName,
+                           @RequestParam String lastName,
+                           @RequestParam int age,
+                           @RequestParam("roles") List<Integer> roleIds) {
+        userService.editUser(id, password, email, firstName, lastName, age, roleIds);
         return "redirect:/admin";
     }
 }

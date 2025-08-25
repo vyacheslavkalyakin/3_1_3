@@ -10,6 +10,9 @@ import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -50,7 +53,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void editUser(int id, String password, String email, String firstName, String lastName, int age) {
+    public void editUser(int id, String password, String email, String firstName, String lastName, int age, List<Integer> roleIds) {
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
             user.setPassword(passwordEncoder.encode(password));
@@ -58,6 +61,14 @@ public class UserServiceImpl implements UserService {
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setAge(age);
+
+            Set<Role> roles = roleIds.stream()
+                    .map(roleRepository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+
             userRepository.save(user);
         }
     }
@@ -67,3 +78,4 @@ public class UserServiceImpl implements UserService {
         return roleRepository.findAll();
     }
 }
+
