@@ -22,12 +22,11 @@ import java.util.Set;
 public class AdminController {
 
     private final UserService userService;
-    private final RoleService roleService;
 
-    public AdminController(UserService userService, RoleService roleService) {
+    public AdminController(UserService userService) {
         this.userService = userService;
-        this.roleService = roleService;
     }
+
     @GetMapping
     public String showAllUsers(Model model, @AuthenticationPrincipal UserDetails currentUser) {
         model.addAttribute("users", userService.getAllUsers());
@@ -38,7 +37,6 @@ public class AdminController {
             model.addAttribute("username", currentUser.getUsername());
             model.addAttribute("authorities", currentUser.getAuthorities());
         }
-
         return "admin";
     }
 
@@ -52,12 +50,7 @@ public class AdminController {
     @PostMapping("/new")
     public String addUser(@ModelAttribute("user") User user,
                           @RequestParam("roles") List<Integer> roleIds) {
-        Set<Role> userRoles = roleIds.stream()
-                .map(roleService::getRoleById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        user.setRoles(userRoles);
-        userService.saveUser(user);
+        userService.saveUser(user, roleIds);
         return "redirect:/admin";
     }
 

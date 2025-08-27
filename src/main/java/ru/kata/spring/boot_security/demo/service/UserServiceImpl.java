@@ -37,8 +37,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void saveUser(User user) {
+    public void saveUser(User user, List<Integer> roleIds) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Set<Role> roles = roleIds.stream()
+                .map(roleRepository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+
+        user.setRoles(roles);
         userRepository.save(user);
     }
 
@@ -67,8 +75,8 @@ public class UserServiceImpl implements UserService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .collect(Collectors.toSet());
-            user.setRoles(roles);
 
+            user.setRoles(roles);
             userRepository.save(user);
         }
     }
@@ -78,4 +86,3 @@ public class UserServiceImpl implements UserService {
         return roleRepository.findAll();
     }
 }
-

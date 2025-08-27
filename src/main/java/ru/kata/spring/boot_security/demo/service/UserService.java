@@ -6,10 +6,9 @@ import ru.kata.spring.boot_security.demo.model.User;
 import java.util.List;
 
 public interface UserService {
-
     List<User> getAllUsers();
 
-    void saveUser(User user);
+    void saveUser(User user, List<Integer> roleIds);
 
     void deleteUser(int id);
 
